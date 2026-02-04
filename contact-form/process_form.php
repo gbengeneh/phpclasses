@@ -11,6 +11,11 @@
         //prepare insert statement
         $stmt = $pdo->prepare("INSERT INTO messages (name, email, message) VALUES (:name, :email, :message)");
         $stmt->execute(['name' => $name, 'email' => $email, 'message' => $message]);
+
+        require 'send_email.php';
+        $email_body = "Name: $name\nEmail: $email\nMessage:\n$message";
+        mail($to, $subject, $email_body, $headers);
+        echo "Your message has been sent successfully.";
        }
     }catch(PDOException $e){
         die("ERROR: Could not process form data. " . $e->getMessage());
