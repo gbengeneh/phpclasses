@@ -1,0 +1,103 @@
+<?php
+session_start();
+require_once 'config/database.php';
+
+$username=$password='';
+$username_err=$password_err=$login_err='';
+
+if($_SERVER["REQUEST_METHOD"]=="post"){
+    // check if username is empty
+    if(empty(trim($_POST["username"]))){
+        $username_err="Please enter username";
+    }else{
+        $username = trim($_POST["username"]);
+    }
+
+    // check if password is empty
+    if(empty(trim($_POST["password"]))){
+        $password_err="Please enter password";
+    }else{
+        $password = trim($_POST["password"]);
+    }
+
+    // validate credentials
+    if(empty($username_err) && empty($password_err)){
+        $sql="SELECT id, username, password FROM users WHERE username =:username";
+
+        if($stmt = $pdo->prepare($sql)){
+            $stmt->bindParam(":username",$param_username, PDO::PARAM_STR);
+            $param_username=$username;
+
+            if($stmt->execute()){
+                // check if username exist
+                if($stmt->rowCount() == 1){
+                  if($row = $stmt->fetch()){
+                    $id =$row["id"];
+                    $username=$row["username"];
+                    $hashed_password=$row["password"];
+
+                    
+                  }
+                }
+            }
+        }
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Login</title>
+</head>
+
+<body>
+    <div class="container">
+       <h2>Login Here</h2>
+        <p>Please fill in your credentials to login.</p>
+        <?php
+          if(!empty($login_err)){
+            echo '<div class="alert alert-danger">'.$login_err.'</div>';
+          }
+        ?>
+        <form action="<?php echo htmlspecialchars($_SERVER("PHP_SELF"));?>" method="post">
+            
+            <div class="form-group">
+                <label for="">Username</label>
+                <input type="text" name="username" value="">
+                <span class="help-block"></span>
+            </div>
+            
+
+            <div class="form-group">
+                <label for="">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" value="">
+                    <span class="toggle-password" onclick="togglePassword">&#128065</span>
+                </div>
+                <span class="help-block"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" class="btn" value="Register">
+            </div>
+            <p>Don't have an account? <a href="register.php">register here</a>.</p>
+        </form>
+    </div>
+    <script>
+        function togglePassword(id){
+            var input = document.getElementById(id);
+            if (input.type === "password") {
+                input.type = "text";
+            } else {
+                input.type = "password";
+            }
+        }
+    </script>
+</body>
+
+</html>
