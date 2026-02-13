@@ -35,13 +35,34 @@ if($_SERVER["REQUEST_METHOD"]=="post"){
                     $id =$row["id"];
                     $username=$row["username"];
                     $hashed_password=$row["password"];
-
                     
+                    if(password_verify($password, $hashed_password)){
+                        // password is correct, start new session
+                        session_start();
+                        // store data in session variable
+                        $_SESSION["loggedin"] = true;
+                        $_SESSION["id"] = $id;
+                        $_SESSION["username"] = $username;
+
+                        // redirect user to dashboard
+                        header("location: dashboard.php");
+                        exit;
+                    }else{
+                        // password not valid
+                        $login_err="Invalid username or password";
+                    }
                   }
+                }else{
+                    // username doesn't exist
+                     $login_err="Invalid username or password";
                 }
+            }else{
+                 $login_err="Oops! Something went wrong. please try again later";
             }
+            unset($stmt);
         }
     }
+    unset($pdo);
 }
 
 ?>
@@ -65,27 +86,24 @@ if($_SERVER["REQUEST_METHOD"]=="post"){
             echo '<div class="alert alert-danger">'.$login_err.'</div>';
           }
         ?>
-        <form action="<?php echo htmlspecialchars($_SERVER("PHP_SELF"));?>" method="post">
-            
-            <div class="form-group">
-                <label for="">Username</label>
-                <input type="text" name="username" value="">
-                <span class="help-block"></span>
-            </div>
-            
-
-            <div class="form-group">
-                <label for="">Password</label>
+        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+            <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
+                <label>Username</label>
+                <input type="text" name="username" value="<?php echo htmlspecialchars($username); ?>">
+                <span class="help-block"><?php echo $username_err; ?></span>
+            </div>    
+            <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
+                <label>Password</label>
                 <div class="password-wrapper">
-                    <input type="password" id="password" name="password" value="">
-                    <span class="toggle-password" onclick="togglePassword">&#128065</span>
+                    <input type="password" id="password" name="password">
+                    <span class="toggle-password" onclick="togglePassword('password')">&#128065;</span>
                 </div>
-                <span class="help-block"></span>
+                <span class="help-block"><?php echo $password_err; ?></span>
             </div>
             <div class="form-group">
-                <input type="submit" class="btn" value="Register">
+                <input type="submit" class="btn" value="Login">
             </div>
-            <p>Don't have an account? <a href="register.php">register here</a>.</p>
+            <p>Don't have an account? <a href="register.php">Sign up now</a>.</p>
         </form>
     </div>
     <script>
