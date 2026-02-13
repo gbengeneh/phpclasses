@@ -1,3 +1,114 @@
+<?php
+session_start();
+require_once 'config/database.php';
+$firstname=$lastname=$username=$email=$password=$confirm_password="";
+$firstname_err=$lastname_err=$username_err=$email_err=$password_err=$confirm_password_err=$register_err="";
+
+if($_SERVER["REQUEST_METHOD"]=="POST"){
+    //validate firstname
+    if(empty(trim($_POST["firstname"]))){
+        $firstname_err = "Please enter your firstname";
+    }else{
+        $firstname = trim($_POST["firstname"]);
+    }
+    //validate lastname
+    if(empty(trim($_POST["lastname"]))){
+        $firstname_err = "Please enter your lastname";
+    }else{
+        $firstname = trim($_POST["lastname"]);
+    }
+    //validate username
+    if(empty(trim($_POST["username"]))){
+        $username_err="Please enter your username";
+    }else{
+        //check if username already exists
+        $sql="SELECT id FROM users WHERE username = :username";
+        if($stmt=$pdo->prepare($sql)){
+            $stmt->bindParam(":username",$param_username, PDO::PARAM_STR);
+            $param_username = trim($_POST["username"]);
+            if($stmt->execute()){
+                if($stmt->rowcount()==1){
+                    $username_err="This username is already used. ";
+                }else{
+                    $username = trim($_POST["username"]);
+                }
+            }else{
+                $register_err = "Oops! Something went wrong, Please try again later.";
+            }
+           unset($stmt);
+        }
+    }
+
+    //email validation
+    if(empty(trim($_POST["email"]))){
+        $email_err ="Please enter your email.";
+    }elseif(!filter_var(trim($_POST["email"]), FILTER_VALIDATE_EMAIL)){
+       $email_err="Please enter a valid email address";
+    }else{
+        //check if email already exists
+        $sql="SELECT id FROM users WHERE email=:email";
+        if($stmt=$pdo->prepare($sql)){
+            $stmt->bindParam(":email", $param_email, PDO::PARAM_STR);
+           $param_email= trim($_POST["email"]);
+           if($stmt->execute()){
+            if($stmt->rowCount()==1){
+                $email_err="this email is already registered";
+            }else{
+                $email= trim($_POST["email"]);
+            }
+           }else{
+            $register_err = "Oops! Something went wrong, Please try again later.";
+           }
+           unset($stmt);
+        }  
+    }
+     // Validate password
+    if (empty(trim($_POST["password"]))) {
+        $password_err = "Please enter a password.";
+    } elseif (strlen(trim($_POST["password"])) < 6) {
+        $password_err = "Password must have at least 6 characters.";
+    } else {
+        $password = trim($_POST["password"]);
+    }
+      // Validate confirm password
+    if (empty(trim($_POST["confirm_password"]))) {
+        $confirm_password_err = "Please confirm password.";
+    } else {
+        $confirm_password = trim($_POST["confirm_password"]);
+        if (empty($password_err) && ($password != $confirm_password)) {
+            $confirm_password_err = "Password did not match.";
+        }
+    }
+
+    //Check input error before inserting in database
+    if(empty($firstname_err) && empty($lastname_err) && empty($username) && empty($email_err) && empty($password_err)&& empty($confirm_password)){
+        $sql="INSERT INTO users(firstname, lastname, username, email, password) VALUES(:firstname, :lastname, :username, :email, :password)";
+        if($stmt = $pdo->prepare($sql)){
+            $stmt->bindParam(":firstname", $param_firstname, PDO::PARAM_STR);
+            $stmt->bindParam(":lastname", $param_lastname, PDO::PARAM_STR);
+            $stmt->bindParam(":username", $param_username, PDO::PARAM_STR);
+            $stmt->bindParam(":email", $param_email, PDO::PARAM_STR);
+            $stmt->bindParam(":password", $param_password, PDO::PARAM_STR);
+            
+            $param_firstname = $firstname;
+            $param_lastname = $lastname;
+            $param_username = $username;
+            $param_email = $email;
+            $param_password = password_hash($password, PASSWORD_DEFAULT);
+
+            if($stmt->execute()){
+                header("location: login.php");
+                exit;
+            }else{
+                $register_err = "Something went wrong. please try again later";
+            }
+            unset($stmt);
+        }
+    }
+    unset($pdo);
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,9 +123,13 @@
     <div class="container">
         <h2>Register</h2>
         <p>Please fill this form to create an account.</p>
-        <!-- register error goes-->
-        <form action="">
-            <div class="form-group">
+        <?php
+          if(!empty($register_err)){
+            echo '<div class="alert alert-danger">'.$register_err.'</div>';
+          }
+        ?>
+        <form action="<?php echo htmlspecialchars($_SERVER("PHP_SELF"));?>" method="post">
+            <div class="form-group <?php echo (!empty($firstname_err))?'has-error' : ''; ?>">
                 <label for=""> First Name</label>
                 <input type="text" name="firstname" value="">
                 <span class="help-block"></span>
