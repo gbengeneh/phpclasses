@@ -84,5 +84,62 @@
                 unset($check_stmt);
             }
         }
+        // Handle profile image upload
+        if(isset($_FILES["profile_image"]) && $_FILES["profile_image"]["error"] == 0){
+            $allowed = ["jpg" => "image/jpeg", "jpeg" => "image/jpeg", "png" => "image/png", "gif" => "image/gif"];
+            $filename = $_FILES["profile_image"]["name"];
+            $filetype = $_FILES["profile_image"]["type"];
+            $filesize = $_FILES["profile_image"]["size"];
+
+            // Verify file extension
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if(!array_key_exists($ext, $allowed)){
+                $profile_image_err = "Please select a valid image format(jpg, jpeg, png, gif)";
+            }
+
+            // verify file size - 5MB maximum
+              if($filesize > 5 *1024 * 1024){
+                $profile_image_err = "File size is larger than the allowed limit of 5MB.";
+              }
+            // verify MIME type of the file
+            if(in_array($filetype, $allowed)){
+                // check for errors before moving the file
+                if(empty($profile_image_err)){
+                    $newfilename = uniqid() . "." . $ext;
+                    $upload_dir = "uploads/";
+                    if(!is_dir($upload_dir)){
+                        mkdir($upload_dir, 0755, true);
+                    }
+                    $destination = $upload_dir . $newfilename;
+                    if(move_uploaded_file($_FILES["profile_image"]["tmp_name"], $destination)){
+                        $profile_image = $destination;
+                    }else{
+                        $profile_image_err = "There was an error uploading your file. Please try again.";
+                    }
+                }
+            }else{
+                $profile_image_err = "Please select a valid image format(jpg, jpeg, png, gif)";
+            }
+
+        }
+        // upload profile if no errors
+        if(empty($firstname_err) && empty($lastname_err) && empty($username_err) && empty($email_err) && empty($profile_image_err)){
+            $update_sql = "UPDATE users SET firstname = :firstname, lastname = :lastname, username = :username, email = :email, profile_image = :profile_image WHERE id = :id";
+            $update_stmt = $pdo->prepare($update_sql);
+            $update_stmt->bindParam(":firstname", $firstname, PDO::PARAM_STR);
+            $update_stmt->bindParam(":lastname", $lastname, PDO::PARAM_STR);
+            $update_stmt->bindParam(":username", $username, PDO::PARAM_STR);
+            $update_stmt->bindParam(":email", $email, PDO::PARAM_STR);
+            $update_stmt->bindParam(":profile_image", $profile_image, PDO::PARAM_STR);
+            $update_stmt->bindParam(":id", $user_id, PDO::PARAM_INT);
+
+            if($update_stmt->execute()){
+                $_SESSION["username"] = $username; // Update session username if changed
+                $update_success = "Profile updated successfully.";
+            }else{
+                $update_err = "There was an error updating your profile. Please try again.";
+            }
+            unset($update_stmt);
+        }
     }
 ?>
