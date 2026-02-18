@@ -143,3 +143,70 @@
         }
     }
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+     <div class="header">
+            <h2>My Profile</h2>
+            <div class="nav">
+                <a href="dashboard.php">Dashboard</a>
+                <a href="logout.php" class="btn btn-danger">Logout</a>
+            </div>
+     </div>
+        <?php 
+           if(!empty($update_err)){
+                echo '<div class="alert alert-danger">' . $update_err . '</div>';
+            } 
+            if(!empty($update_success)){
+                echo '<div class="alert alert-success">' . $update_success . '</div>';
+           }
+        ?>
+        <div class="profile-form">
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" enctype="multipart/form-data">
+                <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
+                    <label>Firstname</label>
+                    <input type="text" name="firstname" value="<?php echo htmlspecialchars($firstname); ?>">
+                    <span class="help-block"><?php echo $firstname_err; ?></span>
+                </div>
+                <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
+                    <label>Lastname</label>
+                    <input type="text" name="lastname" value="<?php echo htmlspecialchars($lastname); ?>">
+                    <span class="help-block"><?php echo $lastname_err; ?></span>
+                </div>
+                <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
+                    <label>Username</label>
+                    <input type="text" name="username" value="<?php echo htmlspecialchars($username); ?>">
+                    <span class="help-block"><?php echo $username_err; ?></span>
+                </div>
+                
+                <div class="form-group <?php echo (!empty($email_err)) ? 'has-error' : ''; ?>">
+                    <label>Email</label>
+                    <input type="email" name="email" value="<?php echo htmlspecialchars($email); ?>">
+                    <span class="help-block"><?php echo $email_err; ?></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Profile Image</label><br>
+                    <?php if (!empty($profile_image)): ?>
+                        <img src="<?php echo htmlspecialchars($profile_image); ?>" alt="Profile Image" style="max-width: 150px; max-height: 150px; display: block; margin-bottom: 10px;">
+                    <?php endif; ?>
+                    <input type="file" name="profile_image" accept="image/*">
+                    <span class="help-block"><?php echo $profile_image_err; ?></span>
+                </div>
+                
+                <div class="form-group">
+                    <input type="submit" class="btn" value="Update Profile">
+                    <a href="dashboard.php" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
