@@ -66,4 +66,65 @@ class Post {
         }
         return false;
     }
+
+    public function update(){
+        $query = "UPDATE " . $this->table_name . " SET title=:title, content=:content, image=:image, category_id=:category_id, user_id=:user_id, updated_at=NOW() WHERE id=:id";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(':title', $this->title);
+        $stmt->bindParam(':content', $this->content);
+        $stmt->bindParam(':image', $this->image);
+        $stmt->bindParam(':category_id', $this->category_id);
+        $stmt->bindParam(':user_id', $this->user_id);
+        $stmt->bindParam(':id', $this->id);
+
+        if($stmt->execute()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function delete(){
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $this->id);
+
+        if($stmt->execute()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function uploadImage(){
+        $target_dir = UPLOAD_DIR;
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0755, true);
+        }
+        $target_file = $target_dir . basename($this->image);
+        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+        // Check if image file is an actual image or fake image
+        $check = getimagesize($_FILES["image"]["tmp_name"]);
+        if($check === false) {
+            return false;
+        }
+
+        // check file size
+        if ($_FILES["image"]["size"] > 500000) { //5MB
+            return false;
+        }
+
+        // Allow certain file formats
+        if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif" ) {
+            return false;
+        }
+        //generate unique file name
+        $unique_name = uniqid() . '.' . $imageFileType;
+        $target_file = $target_dir . $unique_name;
+        if(move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)){
+            return $unique_name;
+        }else{
+            return false;
+        }
+    }
 }
