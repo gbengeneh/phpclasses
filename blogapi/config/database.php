@@ -1,7 +1,7 @@
 <?php
 class Database {
     private $host = 'localhost';
-    private $db_name = 'blogapi';
+    private $db_name = 'blog_api';
     private $username = 'root';
     private $password = ''; 
     public $conn;
