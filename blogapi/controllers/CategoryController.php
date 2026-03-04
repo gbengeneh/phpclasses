@@ -58,4 +58,45 @@ class CategoryController{
             echo json_encode(['message' => 'Failed to create category']);
         }
     }
+
+    public function updateCategory($id, $data){
+        AuthMiddleware::authenticate();
+
+        $this->category->id = $id;
+        if(!$this->category->readone()){
+            http_response_code(404);
+            echo json_encode(['message' => 'Category not found']);
+            return;
+        }
+
+        $this->category->name =isset($data['name']) ? htmlspecialchars(strip_tags($data['name'])) : $this->category->name;
+        $this->category->description = isset($data['description']) ? htmlspecialchars(strip_tags($data['description'])) : $this->category->description;
+
+        if($this->category->update()){
+            http_response_code(200);
+            echo json_encode(['message' => 'Category updated successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to update category']);
+        }
+    }
+
+    public function deleteCategory($id){
+        AuthMiddleware::authenticate();
+
+        $this->category->id = $id;
+        if(!$this->category->readone()){
+            http_response_code(404);
+            echo json_encode(['message' => 'Category not found']);
+            return;
+        }
+
+        if($this->category->delete()){
+            http_response_code(200);
+            echo json_encode(['message' => 'Category deleted successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to delete category']);
+        }
+    }
 }
