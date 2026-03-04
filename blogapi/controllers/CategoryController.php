@@ -40,11 +40,22 @@ class CategoryController{
 
     public function createCategory($data){
         AuthMiddleware::authenticate();
-        
+
         if(empty($data['name'])){
             http_response_code(400);
             echo json_encode(['message' => 'Name is required']);
             return;
+        }
+
+        $this->category->name = htmlspecialchars(strip_tags($data['name']));
+        $this->category->description = isset($data['description']) ? htmlspecialchars(strip_tags($data['description'])) : '';
+
+        if($this->category->create()){
+            http_response_code(201);
+            echo json_encode(['message' => 'Category created successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to create category']);
         }
     }
 }
