@@ -1,0 +1,101 @@
+<?php
+require_once __DIR__ . '/../models/Post.php';
+require_once __DIR__ . '/../models/Category.php';
+require_once __DIR__ . '/../utils/jwtUtil.php';
+
+
+class PostController{
+    private $post;
+    private $category;
+
+    public function __construct() {
+        $this->post = new Post();
+        $this->category = new Category();
+    }
+
+    public function getAllPosts(){
+        $stmt = $this->post->read();
+        $posts = [];
+        while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+            $posts[] = [
+                'id' => $row['id'],
+                'title' => $row['title'],
+                'content' => $row['content'],
+                "image" => $row['image'] ? BASE_URL .$row['image'] : null,
+                'category_id' => $row['category_id'],
+                'category_name' => $row['category_name'],
+                'user_id' => $row['user_id'],
+                'username' => $row['username'],
+                'created_at' => $row['created_at']
+            ];
+        }
+        echo json_encode($posts);
+    }
+   // methos to get simple post with id
+    public function getPost($id){
+        $this->post->id = $id;
+        if($this->post->readOne()){
+            echo json_encode([
+                'id' => $this->post->id,
+                'title' => $this->post->title,
+                'content' => $this->post->content,
+                "image" => $this->post->image ? BASE_URL .$this->post->image : null,
+                'category_id' => $this->post->category_id,
+                'category_name' => $this->post->category_name,,
+                'user_id' => $this->post->user_id,
+                'usernaame' => $this->post->username,
+                'created_at' => $this->post->created_at,
+                'update_at' => $this->post->updated_at
+            ]);
+        }else{
+            http_response_code(404);
+            echo json_encode(['message' => 'Post not found']);
+        }
+    }
+
+    public function createPost($data){
+        $token = JwtUtil::getBearerToken();
+        if(!$token){
+            http_response_code(401);
+            echo json_encode(['message' => 'Access denied. No token provided.']);
+            return;
+        }
+
+        $decoded = JwtUtil::decode($token);
+        if(!$decoded){
+            http_response_code(401);
+            echo json_encode(['message' => 'Access denied. Invalid token.']);
+            return;
+        }
+        if(!isset($data['title']) || $data['title']==='' || !isset($data['content']) || $data['content']==='' || !isset($data['category_id']) || $data['category_id']===''){
+            http_response_code(400);
+            echo json_encode(['message' => 'Title, content and category_id are required:'. json_encode($data)]);
+            return;
+        }
+        $this->post->title = htmlspecialchars(strip_tags($data['title']));
+        $this->post->content = htmlspecialchars(strip_tags($data['content']));
+        $this->post->category_id =$data['category_id'];
+        $this->post->user_id = $decoded['user_id'];
+      
+        // handle image upload if exists
+        if (isset($_FILES['image'])) {
+            $image_name = $this->post->uploadImage($_FILES['image']);
+            if ($image_name) {
+                $this->post->image = $image_name;
+            } else {
+                http_response_code(400);
+                echo json_encode(['message' => 'Invalid image']);
+                return;
+            }
+        }
+        if($this->post->create()){
+           http_response_code(201);
+           echo json_encode(['message'=>'Post created successfuly']);
+        }else{
+              http_response_code(500);
+            echo json_encode(['message' => 'Unable to create post']);
+        }
+
+    }
+
+}

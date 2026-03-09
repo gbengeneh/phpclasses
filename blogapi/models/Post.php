@@ -95,22 +95,22 @@ class Post {
         return false;
     }
 
-    public function uploadImage(){
+    public function uploadImage($file){
         $target_dir = UPLOAD_DIR;
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0755, true);
         }
-        $target_file = $target_dir . basename($this->image);
+        $target_file = $target_dir . basename($file["name"]);
         $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
         // Check if image file is an actual image or fake image
-        $check = getimagesize($_FILES["image"]["tmp_name"]);
+        $check = getimagesize($file["tmp_name"]);
         if($check === false) {
             return false;
         }
 
         // check file size
-        if ($_FILES["image"]["size"] > 500000) { //5MB
+        if ($file["size"] > 500000) { //5MB
             return false;
         }
 
@@ -121,7 +121,7 @@ class Post {
         //generate unique file name
         $unique_name = uniqid() . '.' . $imageFileType;
         $target_file = $target_dir . $unique_name;
-        if(move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)){
+        if(move_uploaded_file($file["tmp_name"], $target_file)){
             return $unique_name;
         }else{
             return false;

@@ -2,30 +2,32 @@
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../controllers/CategoryController.php';
 
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST, GET, DELETE, PUT, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Determine  the request path for routing
-if(isset($_SERVER['PATH_INFO'])){
+// Determine the request path for routinghttps://www.postman.com/workspace/Gbengus-API's-Code~69dd324e-d1d5-4947-8d94-7d21780f1f7d/collection/28013314-45345353-d82a-4581-bd62-c33be012f62f
+if (isset($_SERVER['PATH_INFO'])) {
     $request = explode('/', trim($_SERVER['PATH_INFO'], '/'));
 } else {
-    // fallback: parse the request URI to script name 
+    // Fallback: parse REQUEST_URI relative to script name
     $script_name = dirname($_SERVER['SCRIPT_NAME']);
     $request_uri = $_SERVER['REQUEST_URI'];
     $path = substr($request_uri, strlen($script_name));
-    $path = strtok($path, '?'); // remove query string
+    $path = strtok($path, '?'); // Remove query string
     $request = explode('/', trim($path, '/'));
 }
 
-// handle preflight OPTIONS request
-if($method === 'OPTIONS'){
+// Handle preflight OPTIONS request
+if ($method === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
+
 $authController = new AuthController();
 $categoryController = new CategoryController();
 

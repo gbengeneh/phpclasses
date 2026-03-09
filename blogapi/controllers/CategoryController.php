@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/Category.php';
-require_once __DIR__ . '../middleware/AuthMiddleware.php';
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
 
 class CategoryController{
