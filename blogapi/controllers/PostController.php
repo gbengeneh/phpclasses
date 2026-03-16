@@ -119,6 +119,73 @@ class PostController{
           echo json_encode(['message' =>'Post not found']);
           return;
         }
+
+        if($this->post->user_id != $decoded['user_id']){
+            http_response_code(403);
+            echo json_encode(['message' => 'Access denied. You can only update your own posts.']);
+            return;
+        }
+
+        $this->post->title = isset($data['title']) ? htmlspecialchars(strip_tags($data['title'])) : $this->post->title;
+        $this->post->content = isset($data['content']) ? htmlspecialchars(strip_tags($data['content'])) : $this->post->content;
+        $this->post->category_id = isset($data['category_id']) ? $data['category_id'] : $this->post->category_id;
+
+        // handle image upload if exists
+        if (isset($_FILES['image'])) {
+            $image_name = $this->post->uploadImage($_FILES['image']);
+            if ($image_name) {
+                $this->post->image = $image_name;
+            } else {
+                http_response_code(400);
+                echo json_encode(['message' => 'Invalid image']);
+                return;
+            }
+        }
+
+        if($this->post->update()){
+            echo json_encode(['message' => 'Post updated successfully']);
+        }else{
+            http_response_code(500);
+            echo json_encode(['message' => 'Unable to update post']);
+            return;
+        }
+    }
+
+    public function deletePost($id){
+        $token = JwtUtil::getBearerToken();
+        if(!$token){
+            http_response_code(401);
+            echo json_encode(['message' => 'Access denied. No token provided.']);
+            return;
+        }
+
+        $decoded = JwtUtil::decode($token);
+        if(!$decoded){
+            http_response_code(401);
+            echo json_encode(['message' => 'Access denied. Invalid token.']);
+            return;
+        }
+         
+        $this->post->id = $id;
+        if(!$this->post->readOne()){
+          http_response_code(404);
+          echo json_encode(['message' =>'Post not found']);
+          return;
+        }
+
+        if($this->post->user_id != $decoded['user_id']){
+            http_response_code(403);
+            echo json_encode(['message' => 'Access denied. You can only delete your own posts.']);
+            return;
+        }
+
+        if($this->post->delete()){
+            echo json_encode(['message' => 'Post deleted successfully']);
+        }else{
+            http_response_code(500);
+            echo json_encode(['message' => 'Unable to delete post']);
+            return;
+        }
     }
 
 }
