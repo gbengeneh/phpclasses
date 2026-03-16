@@ -98,4 +98,27 @@ class PostController{
 
     }
 
+    public function updatePost($id, $data){
+        $token =JwtUtil::getBearerToken();
+        if(!$token){
+            http_response_code(401);
+            echo json_encode(['message' => 'Access denied. No token provided.']);
+            return;
+        }
+
+        $decoded = JwtUtil::decode($token);
+        if(!$decoded){
+            http_response_code(401);
+            echo json_encode(['message' => 'Access denied. Invalid token.']);
+            return;
+        }
+         
+        $this->post->id = $id;
+        if(!$this->post->readOne()){
+          http_response_code(404);
+          echo json_encode(['message' =>'Post not found']);
+          return;
+        }
+    }
+
 }
