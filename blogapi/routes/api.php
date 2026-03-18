@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../controllers/CategoryController.php';
 require_once __DIR__ . '/../controllers/PostController.php';
+require_once __DIR__ . '/../controllers/CommentController.php';
 
 
 header("Access-Control-Allow-Origin: *");
@@ -32,6 +33,8 @@ if ($method === 'OPTIONS') {
 $authController = new AuthController();
 $categoryController = new CategoryController();
 $postController = new PostController();
+$commentController = new CommentController();
+
 
 if($request[0] === 'register' && $method === 'POST'){
     $data = json_decode(file_get_contents("php://input"), true);
@@ -76,7 +79,29 @@ if($request[0] === 'register' && $method === 'POST'){
         http_response_code(405);
         echo json_encode(['message' => 'Method not allowed']);
     }
-} else {
+} elseif ($request[0] === 'comments') {
+    if ($method === 'GET') {
+        if (isset($request[1])) {
+            $commentController->getComment($request[1]);
+        } elseif (isset($_GET['post_id'])) {
+            $commentController->getCommentsByPost($_GET['post_id']);
+        } else {
+            $commentController->getAllComments();
+        }
+    } elseif ($method === 'POST') {
+        $data = json_decode(file_get_contents("php://input"), true);
+        $commentController->createComment($data);
+    } elseif ($method === 'PUT' && isset($request[1])) {
+        $data = json_decode(file_get_contents("php://input"), true);
+        $commentController->updateComment($request[1], $data);
+    } elseif ($method === 'DELETE' && isset($request[1])) {
+        $commentController->deleteComment($request[1]);
+    } else {
+        http_response_code(405);
+        echo json_encode(['message' => 'Method not allowed']);
+    }
+}
+ else {
     http_response_code(404);
     echo json_encode(['message' => 'Endpoint not found']);
 }
