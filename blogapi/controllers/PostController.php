@@ -41,7 +41,7 @@ class PostController{
                 'content' => $this->post->content,
                 "image" => $this->post->image ? BASE_URL .$this->post->image : null,
                 'category_id' => $this->post->category_id,
-                'category_name' => $this->post->category_name,,
+                'category_name' => $this->post->category_name,
                 'user_id' => $this->post->user_id,
                 'usernaame' => $this->post->username,
                 'created_at' => $this->post->created_at,
